@@ -1,10 +1,18 @@
 source 'http://rubygems.org'
 
-gem 'sqlite3'
 gem 'sinatra'
 gem 'datamapper'
-gem 'dm-sqlite-adapter'
 gem 'haml'
 gem 'httparty'
 gem 'nokogiri'
 gem 'thin'
+
+group :development do
+  gem 'dm-sqlite-adapter'
+  gem 'sqlite3'
+end
+
+group :production do
+  gem 'dm-postgres-adapter'
+end
+
