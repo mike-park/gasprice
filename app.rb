@@ -5,6 +5,8 @@ require 'haml'
 require ::File.expand_path('../gas',  __FILE__)
 
 configure :production do
+  ENV['APP_ROOT'] ||= File.dirname(__FILE__)
+  $:.unshift "#{ENV['APP_ROOT']}/vendor/plugins/newrelic_rpm/lib"
   require 'newrelic_rpm'
 end
 
