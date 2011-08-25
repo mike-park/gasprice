@@ -9,13 +9,13 @@ end
 
 get '/' do
   Gas.store_latest_price
-  @prices = Gas::Price.all(:order => [ :created_at.desc ])
+  @prices = Gas::Price.all(:order => [ :created_at.desc ], :limit => 10)
   haml :index
 end
 
 get '/chart' do
-  prices = Gas::Price.all(:order => [ :created_at.desc ], :limit => 10)
-  @chart_url = Gas::Chart.link(prices)
+  prices = Gas::Price.all(:order => [ :created_at.desc ])
+  @chart_script = Gas::Chart.new(prices).script
   haml :chart
 end
 
@@ -32,6 +32,8 @@ __END__
 
 @@ index
 %h2 Prices
+%a{href: 'chart'}
+  Show Chart
 %table
   %thead
     %tr
@@ -46,7 +48,8 @@ __END__
           %td= price.send(fuel)
     
 @@ chart
+%script{type:'text/javascript', src:'https://www.google.com/jsapi'}
+%script{type:'text/javascript'}
+  = @chart_script
 %h2 Chart
-%div
-  = @chart_url
-%img{:src => @chart_url}      
+%div{id:'chart_div', style:'width: 700px; height: 240px;'}

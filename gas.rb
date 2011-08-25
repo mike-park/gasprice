@@ -3,7 +3,7 @@ require 'nokogiri'
 require 'datamapper'
 
 DataMapper::Logger.new($stdout, :debug)
-DataMapper.setup(:default, "sqlite:#{File.expand_path('..', __FILE__)}/db.sql")
+DataMapper.setup(:default, ENV['DATABASE_URL'] || "sqlite:#{File.expand_path('..', __FILE__)}/db.sql")
 
 module Gas
 
@@ -70,7 +70,7 @@ module Gas
   DataMapper.finalize
   DataMapper.auto_upgrade!
 
-  class Chart
+  class FixedChart
     BaseUrl = "http://chart.apis.google.com/chart?chs=440x220&cht=lc"
 
     def self.link(prices)
@@ -105,6 +105,60 @@ module Gas
 
     def prices_of(fuel)
       @prices.map{|p| p.send(fuel)} 
+    end
+  end
+
+  class Chart
+    def initialize(prices)
+      @prices = prices
+    end
+
+    def script
+      result = <<END
+      google.load('visualization', '1', {'packages':['annotatedtimeline']});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = new google.visualization.DataTable(#{DataTable.new(@prices).to_json});
+        var chart = new google.visualization.AnnotatedTimeLine(document.getElementById('chart_div'));
+        chart.draw(data);
+      }
+END
+    end
+
+    class DataTable
+      def initialize(prices)
+        @prices = prices
+      end
+
+      def to_json
+        "{" + labels + "," + rows + "}"
+      end
+      
+      def labels
+        "cols: [" +
+          "{label:'Date', type:'datetime'}," +
+          Fuels.map{|fuel| "{label:'#{fuel}', type:'number'}" }.join(",") +
+          "]"
+      end
+      
+      def rows
+        "rows: [#{make_rows}]"
+      end
+
+      def make_rows
+        @prices.map{|price| make_a_row(price)}.join(",")        
+      end
+
+      def make_a_row(price)
+        "{c:[" +
+          make_columns(["new Date('#{price.created_at.to_s}')"] +
+                       Fuels.map{|fuel| price.send(fuel)}) +
+          "]}"
+      end
+
+      def make_columns(ary)
+        ary.map{|elem| "{v: #{elem}}"}.join(",")
+      end
     end
   end
   
