@@ -13,6 +13,12 @@ get '/' do
   haml :index
 end
 
+get '/chart' do
+  prices = Gas::Price.all(:order => [ :created_at.desc ], :limit => 10)
+  @chart_url = Gas::Chart.link(prices)
+  haml :chart
+end
+
 __END__
 @@ layout
 !!!
@@ -39,3 +45,8 @@ __END__
         - Gas::Fuels.each do |fuel|
           %td= price.send(fuel)
     
+@@ chart
+%h2 Chart
+%div
+  = @chart_url
+%img{:src => @chart_url}      

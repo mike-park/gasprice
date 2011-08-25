@@ -69,6 +69,79 @@ module Gas
 
   DataMapper.finalize
   DataMapper.auto_upgrade!
+
+  class Chart
+    BaseUrl = "http://chart.apis.google.com/chart?chs=440x220&cht=lc"
+
+    def self.link(prices)
+      self.new(prices).link
+    end
+
+    def initialize(prices)
+      @prices = prices
+    end
+
+    def link
+      BaseUrl + color + data_size + labels + data
+    end
+
+    def data_size
+      "&chds=" +
+        Fuels.map{|fuel| prices_of(fuel).max}.join(",")
+    end
+
+    def labels
+      "&chdl=" + Fuels.join("|")
+    end
+
+    def color
+      "&chco=0000FF,00FF00,00FFFF,FF0000" 
+    end
+
+    def data
+      "&chd=t:" +
+        Fuels.map{|fuel| prices_of(fuel).join(",")}.join("|")
+    end
+
+    def prices_of(fuel)
+      @prices.map{|p| p.send(fuel)} 
+    end
+  end
+  
+  class TestData
+    def initialize
+      @rand = Random.new
+    end
+
+    def create
+      100.times do
+        Price.create(random_data)
+      end
+    end
+
+    private
+    
+    def rand(range)
+      @rand.rand(range)
+    end
+    
+    def random_data
+      hash = { :created_at => random_date }
+      Fuels.each do |fuel|
+        hash[fuel] = random_price
+      end
+      hash
+    end
+
+    def random_price
+      rand(100..160).to_f/100.0
+    end
+    
+    def random_date
+      Time.new(2011, 1, rand(1..31), rand(0..23), rand(0..59))
+    end
+  end
+
   def self.store_latest_price
     latest = Price.first(order: [ :created_at.desc ])
     # return if last save within about the last 30 minutes
