@@ -4,6 +4,10 @@ require 'sinatra'
 require 'haml'
 require ::File.expand_path('../gas',  __FILE__)
 
+configure :production do
+  require 'newrelic_rpm'
+end
+
 before do
 end
 
