@@ -5,12 +5,10 @@ require 'haml'
 require ::File.expand_path('../gas',  __FILE__)
 
 before do
-  @gas = Gas::CurrentPrice.new
 end
 
 get '/' do
-  @current_prices = @gas.prices
-  Gas::Price.create(@current_prices.merge(:created_at => Time.now))
+  Gas.store_latest_price
   @prices = Gas::Price.all(:order => [ :created_at.desc ])
   haml :index
 end

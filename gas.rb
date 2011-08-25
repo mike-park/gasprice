@@ -69,4 +69,11 @@ module Gas
 
   DataMapper.finalize
   DataMapper.auto_upgrade!
+  def self.store_latest_price
+    latest = Price.first(order: [ :created_at.desc ])
+    # return if last save within about the last 30 minutes
+    return if latest && (latest.created_at > (DateTime.now - 0.02))
+    current = CurrentPrice.new
+    Price.create(current.prices.merge(:created_at => Time.now))
+  end
 end
