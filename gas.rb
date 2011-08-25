@@ -7,6 +7,8 @@ DataMapper.setup(:default, "sqlite:#{File.expand_path('..', __FILE__)}/db.sql")
 
 module Gas
 
+  Fuels = %w(petrol91 petrol95 petrol98 diesel)
+  
   class CurrentPrice
     include HTTParty
     base_uri 'http://gasoline-germany.com/statistik.phtml'
@@ -20,12 +22,12 @@ module Gas
     
     parser Parser::Simple
     
-    Fuels = [[:regular_price, 'Regular 91 OCT', 1],
-             [:super_price, 'Super 95 OCT', 3],
-             [:premium_price, 'Super Premium 98 OCT', 5],
-             [:diesel_price, 'Diesel', 7]]
+    HtmlMap = [[Fuels[0], 'Regular 91 OCT', 1],
+               [Fuels[1], 'Super 95 OCT', 3],
+               [Fuels[2], 'Super Premium 98 OCT', 5],
+               [Fuels[3], 'Diesel', 7]]
     
-    Fuels.each do |name, string, offset|
+    HtmlMap.each do |name, string, offset|
       define_method(name) do
         if price_fixing_table[offset].text == string
           price_to_number(price_fixing_table[offset + 1].text)
@@ -38,8 +40,8 @@ module Gas
     
     def prices
       hash = {}
-      Fuels.map do |name, string, offset|
-        hash[string] = self.send(name)
+      Fuels.each do |fuel|
+        hash[fuel] = self.send(fuel)
       end
       hash
     end
@@ -60,7 +62,9 @@ module Gas
 
     property :id, Serial
     property :created_at, DateTime
-    property :diesel_price, Float
+    Fuels.each do |fuel|
+      property fuel.to_sym, Float
+    end
   end
 
   DataMapper.finalize

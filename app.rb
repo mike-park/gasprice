@@ -10,7 +10,7 @@ end
 
 get '/' do
   @current_prices = @gas.prices
-  Gas::Price.create(:diesel_price => @gas.diesel_price, :created_at => Time.now)
+  Gas::Price.create(@current_prices.merge(:created_at => Time.now))
   @prices = Gas::Price.all(:order => [ :created_at.desc ])
   haml :index
 end
@@ -27,21 +27,17 @@ __END__
       = yield
 
 @@ index
-%h2 Current Prices
+%h2 Prices
 %table
   %thead
     %tr
-      - @current_prices.keys.each do |fuel|
+      %th Date
+      - Gas::Fuels.each do |fuel|
         %th= fuel
-    %tr
-      - @current_prices.values.each do |price|
-        %td= price
-
-%h2 Historical Prices
-%table
-  %thead
+  %tbody
     - @prices.each do |price|
       %tr
         %td= price.created_at
-        %td= price.diesel_price
+        - Gas::Fuels.each do |fuel|
+          %td= price.send(fuel)
     
