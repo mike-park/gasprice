@@ -120,7 +120,7 @@ module Gas
       function drawChart() {
         var data = new google.visualization.DataTable(#{DataTable.new(@prices).to_json});
         var chart = new google.visualization.AnnotatedTimeLine(document.getElementById('chart_div'));
-        chart.draw(data);
+        chart.draw(data, {scaleType:'maximized'});
       }
 END
     end
