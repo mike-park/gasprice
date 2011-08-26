@@ -4,6 +4,9 @@ require 'sinatra'
 require 'haml'
 require ::File.expand_path('../gas',  __FILE__)
 
+# store times as local to DE
+ENV['TZ'] = 'Europe/Berlin'
+
 configure :production do
   ENV['APP_ROOT'] ||= File.dirname(__FILE__)
   $:.unshift "#{ENV['APP_ROOT']}/vendor/plugins/newrelic_rpm/lib"
@@ -41,6 +44,7 @@ __END__
 %h2 Prices
 %a{href: 'chart'}
   Show Chart
+%h3 Last 10 price fixes
 = haml :price_table
 
 @@ price_table
@@ -53,7 +57,7 @@ __END__
   %tbody
     - @prices.each do |price|
       %tr
-        %td= price.created_at
+        %td= price.created_at.strftime("%d.%m.%Y %H:%M")
         - Gas::Fuels.each do |fuel|
           %td= price.send(fuel)
 
