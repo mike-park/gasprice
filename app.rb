@@ -20,8 +20,9 @@ get '/' do
 end
 
 get '/chart' do
-  prices = Gas::Price.all(:order => [ :created_at.desc ])
-  @chart_script = Gas::Chart.new(prices).script
+  @prices = Gas::Price.all(:order => [ :created_at.desc ])
+  @chart_script = Gas::Chart.new(@prices).script
+  @prices = @prices.slice(0..10)
   haml :chart
 end
 
@@ -40,6 +41,9 @@ __END__
 %h2 Prices
 %a{href: 'chart'}
   Show Chart
+= haml :price_table
+
+@@ price_table
 %table
   %thead
     %tr
@@ -52,10 +56,12 @@ __END__
         %td= price.created_at
         - Gas::Fuels.each do |fuel|
           %td= price.send(fuel)
-    
+
 @@ chart
 %script{type:'text/javascript', src:'https://www.google.com/jsapi'}
 %script{type:'text/javascript'}
   = @chart_script
 %h2 Chart
-%div{id:'chart_div', style:'width: 700px; height: 240px;'}
+%div{id:'chart_div', style:'width: 700px; height: 400px; margin-bottom: 10px;'}
+%h3 Last 10 price fixes
+= haml :price_table
